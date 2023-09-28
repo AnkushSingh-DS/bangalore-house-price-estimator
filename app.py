@@ -59,7 +59,7 @@ def main():
 
     if st.button("About"):
         st.text("Please find the code at")
-        st.text("https://github.com/Lokeshrathi/Bangalore-house-s-rate")
+        st.text("https://github.com/AnkushSingh-DS/bangalore-house-price-estimator")
 
 if __name__ == '__main__':
     main()
