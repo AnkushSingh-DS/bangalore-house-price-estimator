@@ -45,11 +45,16 @@ def main():
 
     if st.button("💰 Predict Price"):
         try:
-            sqft, bath, bhk = float(sqft), float(bath), float(bhk)
+            # Ensure input is properly formatted by stripping spaces
+            sqft = float(sqft.strip())
+            bath = float(bath.strip())
+            bhk = float(bhk.strip())
+    
             price = predict_price(selected_location, sqft, bath, bhk)
             st.success(f"🏡 The estimated house price is **₹{price} lakhs**.")
         except ValueError:
             st.error("⚠️ Please enter valid numeric values for Sq-ft, Bathrooms, and BHK.")
+
 
     st.sidebar.markdown("### About")
     st.sidebar.info("This app predicts Bangalore house prices using a trained model.")
