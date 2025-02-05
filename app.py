@@ -1,63 +1,34 @@
-
 import streamlit as st
-import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 import pickle
+import numpy as np
+from PIL import Image
 
-# Load the pre-trained model
-@st.cache_resource
-def load_model():
-    with open('banglore_home_prices_model.pickle', 'rb') as file:
-        return pickle.load(file)
-
-model = load_model()
+# Load the pre-trained model and necessary data
+pickle_in = open('banglore_home_prices_model.pickle', 'rb')
+classifier = pickle.load(pickle_in)
 
 # List of available locations
-locations = [
-    "1st block jayanagar", "1st phase jp nagar", "2nd phase judicial layout",
-    "2nd stage nagarbhavi", "5th block hbr layout", "5th phase jp nagar",
-    "6th phase jp nagar", "7th phase jp nagar", "8th phase jp nagar",
-    "9th phase jp nagar", "aecs layout", "abbigere"
-]  # Trimmed for readability; use full list in actual code
+locations = ["1st block jayanagar", "1st phase jp nagar", "2nd phase judicial layout", "2nd stage nagarbhavi", "5th block hbr layout", "5th phase jp nagar", "6th phase jp nagar", "7th phase jp nagar", "8th phase jp nagar", "9th phase jp nagar", "aecs layout", "abbigere", "akshaya nagar", "ambalipura", "ambedkar nagar", "amruthahalli", "anandapura", "ananth nagar", "anekal", "anjanapura", "ardendale", "arekere", "attibele", "beml layout", "btm 2nd stage", "btm layout", "babusapalaya", "badavala nagar", "balagere", "banashankari", "banashankari stage ii", "banashankari stage iii", "banashankari stage v", "banashankari stage vi", "banaswadi", "banjara layout", "bannerghatta", "bannerghatta road", "basavangudi", "basaveshwara nagar", "battarahalli", "begur", "begur road", "bellandur", "benson town", "bharathi nagar", "bhoganhalli", "billekahalli", "binny pete", "bisuvanahalli", "bommanahalli", "bommasandra", "bommasandra industrial area", "bommenahalli", "brookefield", "budigere", "cv raman nagar", "chamrajpet", "chandapura", "channasandra", "chikka tirupathi", "chikkabanavar", "chikkalasandra", "choodasandra", "cooke town", "cox town", "cunningham road", "dasanapura", "dasarahalli", "devanahalli", "devarachikkanahalli", "dodda nekkundi", "doddaballapur", "doddakallasandra", "doddathoguru", "domlur", "dommasandra", "epip zone", "electronic city", "electronic city phase ii", "electronics city phase 1", "frazer town", "gm palaya", "garudachar palya", "giri nagar", "gollarapalya hosahalli", "gottigere", "green glen layout", "gubbalala", "gunjur", "hal 2nd stage", "hbr layout", "hrbr layout", "hsr layout", "haralur road", "harlur", "hebbal", "hebbal kempapura", "hegde nagar", "hennur", "hennur road", "hoodi", "horamavu agara", "horamavu banaswadi", "hormavu", "hosa road", "hosakerehalli", "hoskote", "hosur road", "hulimavu", "isro layout", "itpl", "iblur village", "indira nagar", "jp nagar", "jakkur", "jalahalli", "jalahalli east", "jigani", "judicial layout", "kr puram", "kadubeesanahalli", "kadugodi", "kaggadasapura", "kaggalipura", "kaikondrahalli", "kalena agrahara", "kalyan nagar", "kambipura", "kammanahalli", "kammasandra", "kanakapura", "kanakpura road", "kannamangala", "karuna nagar", "kasavanhalli", "kasturi nagar", "kathriguppe", "kaval byrasandra", "kenchenahalli", "kengeri", "kengeri satellite town", "kereguddadahalli", "kodichikkanahalli", "kodigehaali", "kodigehalli", "kodihalli", "kogilu", "konanakunte", "koramangala", "kothannur", "kothanur", "kudlu", "kudlu gate", "kumaraswami layout", "kundalahalli", "lb shastri nagar", "laggere", "lakshminarayana pura", "lingadheeranahalli", "magadi road", "mahadevpura", "mahalakshmi layout", "mallasandra", "malleshpalya", "malleshwaram", "marathahalli", "margondanahalli", "marsur", "mico layout", "munnekollal", "murugeshpalya", "mysore road", "ngr layout", "nri layout", "nagarbhavi", "nagasandra", "nagavara", "nagavarapalya", "narayanapura", "neeladri nagar", "nehru nagar", "ombr layout", "old airport road", "old madras road", "padmanabhanagar", "pai layout", "panathur", "parappana agrahara", "pattandur agrahara", "poorna pragna layout", "prithvi layout", "r.t. nagar", "rachenahalli", "raja rajeshwari nagar", "rajaji nagar", "rajiv nagar", "ramagondanahalli", "ramamurthy nagar", "rayasandra", "sahakara nagar", "sanjay nagar", "sarakki nagar", "sarjapur", "sarjapur  road", "sarjapura - attibele road", "sector 2 hsr layout", "sector 7 hsr layout", "seegehalli", "shampura", "shivaji nagar", "singasandra", "somasundara palya", "sompura", "sonnenahalli", "subramanyapura", "sultan palaya", "tc palaya", "talaghattapura", "thanisandra", "thigalarapalya", "thubarahalli", "thyagaraja nagar", "tindlu", "tumkur road", "ulsoor", "uttarahalli", "varthur", "varthur road", "vasanthapura", "vidyaranyapura", "vijayanagar", "vishveshwarya layout", "vishwapriya layout", "vittasandra", "whitefield", "yelachenahalli", "yelahanka", "yelahanka new town", "yelenahalli", "yeshwanthpur"]
 
-# Mapping locations to numerical indices
 location_to_index = {loc: i for i, loc in enumerate(locations)}
 
 def predict_price(location, sqft, bath, bhk):
-    """Predict house price based on input parameters."""
-    x = np.zeros(len(locations) + 3)  # Adjust feature vector size dynamically
+    x = np.zeros(244)
     x[0], x[1], x[2] = sqft, bath, bhk
-
-    # Encode the location
-    loc_index = location_to_index.get(location)
-    if loc_index is not None:
+    loc_index = location_to_index.get(location, -1)
+    if loc_index != -1:
         x[loc_index + 3] = 1
-
-    return round(model.predict([x])[0], 2)
+    price = classifier.predict([x])[0]
+    return f'{round(price,2)} Cr' if price >= 100 else f'{round(price,2)} L'
 
 def main():
-    st.title("🏠 Bangalore House Price Prediction")
-    st.write("Enter the details below to get an estimated house price.")
+    st.title("Bangalore House Rate Prediction")
+    selected_location = st.selectbox("Select a location", locations)
+    sqft, bath, bhk = st.text_input("Sq-ft area"), st.text_input("Number of Bathrooms"), st.text_input("Number of BHK")
+    if st.button("House Price"):
+        st.success(f'The predicted house price is {predict_price(selected_location, float(sqft), float(bath), float(bhk))}')
 
-    selected_location = st.selectbox("📍 Select a location", locations)
-    sqft = st.text_input("📏 Square Feet Area", "")
-    bath = st.text_input("🚿 Number of Bathrooms", "")
-    bhk = st.text_input("🛏 Number of BHK", "")
-
-    if st.button("💰 Predict Price"):
-        try:
-            # Ensure input is properly formatted by stripping spaces
-            sqft = float(sqft.strip())
-            bath = float(bath.strip())
-            bhk = float(bhk.strip())
-    
-            price = predict_price(selected_location, sqft, bath, bhk)
-            st.success(f"🏡 The estimated house price is **₹{price} lakhs**.")
-        except ValueError:
-            st.error("⚠️ Please enter valid numeric values for Sq-ft, Bathrooms, and BHK.")
-
-
-    st.sidebar.markdown("### About")
-    st.sidebar.info("This app predicts Bangalore house prices using a trained model.")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
